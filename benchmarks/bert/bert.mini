@@ -1,0 +1,87 @@
+struct node
+{
+   int data;
+   struct node next;
+};
+
+struct tnode
+{
+   int data;
+   struct tnode left;
+   struct tnode right;
+};
+
+struct i
+{
+   int i;
+};
+
+struct myCopy
+{
+   bool b;
+};
+
+int a,b;
+struct i i;
+
+fun concatLists(struct node first, struct node second) struct node
+{
+   struct node temp;
+
+   temp = first;
+
+   if (first == null)
+   {
+      return second;
+   }
+
+   while (temp.next != null)
+   {
+      temp = temp.next;
+   }
+
+   temp.next = second;
+
+   return first;
+}
+
+fun add(struct node list, int toAdd) struct node
+{
+   struct node newNode;
+
+   newNode = new node;
+   newNode.data = toAdd;
+   newNode.next = list;
+
+   return newNode;
+}
+
+
+fun myCopy(struct node src) struct node
+{
+   if(src == null)
+   {
+      return null;
+   }
+   return concatLists(add(null, src.data), myCopy(src.next));
+}
+
+fun main() int
+{
+   int i, element;
+   struct node myList, copyList1, copyList2, sortedList;
+   myList = null;
+   copyList1 = null;
+   copyList2 = null;
+
+   i = 0;
+   while(i < 10)
+   {
+      element = read;
+      myList = add(myList, element);
+      copyList1 = myCopy(myList);
+      copyList2 = myCopy(myList);
+      i = i + 1;
+   }
+   return 0;
+}
