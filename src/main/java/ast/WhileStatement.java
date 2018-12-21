@@ -25,4 +25,8 @@ public class WhileStatement
        }
    }
 
+    public boolean returnCheck() {
+        return body.returnCheck();
+    }
+
 }

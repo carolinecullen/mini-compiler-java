@@ -1,8 +1,13 @@
 package ast;
 
+import cfg.CfgNode;
 import llvm.*;
+import mini.MiniCompiler;
 
 import java.util.HashMap;
+
+import static cfg.Cfg.ssa;
+import static mini.MiniCompiler.user_spec;
 
 public class DotExpression
    extends AbstractExpression
@@ -47,13 +52,12 @@ public class DotExpression
            if (hld.reg_type instanceof StructPtrLLVM) {
                StructPtrLLVM hld1 = (StructPtrLLVM)hld.reg_type;
                HashMap<String, StructField> ret_tbl = Program.struct_table.get(hld1.getStructName());
-
                GetPtrLLVM gptr = new GetPtrLLVM(hld, hld1, ret_tbl.get(id).type.getLLVMType(), ret_tbl.get(id).index);
-               LoadLLVM ld = new LoadLLVM(gptr.result, ret_tbl.get(id).type.getLLVMType());
                c.llvm_instructions.add(gptr);
+               LoadLLVM ld = new LoadLLVM(gptr.result, ret_tbl.get(id).type.getLLVMType());
                c.llvm_instructions.add(ld);
-
                return ld.result;
+
            } else {
                // should not get here
                System.err.println("Invalid Left dot value: expected struct type");

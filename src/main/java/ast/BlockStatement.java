@@ -34,4 +34,15 @@ public class BlockStatement
        return ret_type;
    }
 
+   public boolean returnCheck() {
+       for (Statement s: statements) {
+           if(s.returnCheck())
+           {
+               return true;
+           }
+       }
+
+       return false;
+   }
+
 }

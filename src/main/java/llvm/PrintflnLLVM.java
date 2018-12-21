@@ -1,22 +1,56 @@
 package llvm;
 
+import arm.MovArm;
+import cfg.CfgNode;
+
+import java.util.ArrayList;
+
 public class PrintflnLLVM
         implements InstructionLLVM
 {
-    String reg;
+    public ExprReturn reg;
     String ty;
+    String instruction;
 
-    public PrintflnLLVM (Register r) {
-        reg = r.reg_name;
-        ty = r.reg_type.getName();
+    public void setInstruction(String instruction) {
+        this.instruction = instruction;
     }
 
-    public PrintflnLLVM (ImmediateLLVM r) {
-        reg = r.num;
+    public PrintflnLLVM (ExprReturn r) {
+        reg = r;
         ty = "i32";
+        instruction = this.toString();
+    }
+
+    public String getInstruction() {
+        return instruction;
     }
 
     public String toString() {
-        return "call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([5 x i8], [5 x i8]* @.println, i32 0, i32 0), " + ty + " " + reg + ")";
+        if (reg instanceof Register) {
+            return "call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([5 x i8], [5 x i8]* @.println, i32 0, i32 0), " + ty + " " + ((Register)reg).reg_name + ")";
+        } else {
+            return "call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([5 x i8], [5 x i8]* @.println, i32 0, i32 0), " + ty + " " + ((ImmediateLLVM)reg).num + ")";
+        }
     }
+
+    public ArrayList<String> getArm(CfgNode c_node) {
+        ArrayList<String> ret_str = new ArrayList<>();
+//        MovArm mv1 = new MovArm("r0", (Register) reg);
+        MovArm mv2 = new MovArm(reg, "r1");
+//        ret_str.add(mv1.toString());
+        ret_str.add(mv2.toString());
+        ret_str.add("movw r0, #:lower16:.PRINTLN_FMT\n\tmovt r0, #:upper16:.PRINTLN_FMT\n\tbl printf");
+        return ret_str;
+    }
+
+    public void replaceRegForOpt(String func) {}
+
+    public Register getReturnVal() {
+        return null;
+    }
+
+    public void replaceRet(Register r) {
+    }
+
 }

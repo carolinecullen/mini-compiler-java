@@ -41,6 +41,7 @@ public class Function
    public Type TypeCheck()
    {
       body.TypeCheck(local_symbol_table, retType);
+      body.returnCheck();
       return null;
    }
 }

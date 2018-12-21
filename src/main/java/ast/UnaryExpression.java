@@ -4,8 +4,12 @@ import llvm.ExprReturn;
 import llvm.ImmediateLLVM;
 import llvm.SubLLVM;
 import llvm.XorLLVM;
+import mini.MiniCompiler;
 
 import java.util.HashMap;
+
+import static cfg.Cfg.ssa;
+import static mini.MiniCompiler.user_spec;
 
 public class UnaryExpression
    extends AbstractExpression

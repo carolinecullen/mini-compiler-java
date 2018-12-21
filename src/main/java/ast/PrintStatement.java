@@ -16,4 +16,8 @@ public class PrintStatement
    public Type TypeCheck(HashMap<String, SymbolEntry> locals, Type ret_type) {
        return expression.TypeCheck(locals, ret_type);
    }
+
+   public boolean returnCheck() {
+      return false;
+   }
 }

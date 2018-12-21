@@ -27,4 +27,6 @@ public class ReturnStatement
        }
    }
 
+   public boolean returnCheck() { return true; }
+
 }

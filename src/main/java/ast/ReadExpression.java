@@ -4,8 +4,12 @@ import llvm.ExprReturn;
 import llvm.IntLLVM;
 import llvm.ReadLLVM;
 import llvm.Register;
+import mini.MiniCompiler;
 
 import java.util.HashMap;
+
+import static cfg.Cfg.ssa;
+import static mini.MiniCompiler.user_spec;
 
 public class ReadExpression
    extends AbstractExpression

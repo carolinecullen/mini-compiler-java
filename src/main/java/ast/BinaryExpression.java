@@ -1,8 +1,13 @@
 package ast;
 
+import cfg.CfgNode;
 import llvm.*;
+import mini.MiniCompiler;
 
 import java.util.HashMap;
+
+import static cfg.Cfg.ssa;
+import static mini.MiniCompiler.user_spec;
 
 public class BinaryExpression
    extends AbstractExpression
@@ -232,46 +237,22 @@ public class BinaryExpression
                return sub.result;
            }
            case LT: {
-               IcmpLLVM icmp = new IcmpLLVM("slt", left_ret, right_ret);
-               ZextLLVM zext = new ZextLLVM(icmp.result.reg_name);
-               c.llvm_instructions.add(icmp);
-               c.llvm_instructions.add(zext);
-               return zext.result;
+               return addComparisonInstructions (c, "slt", left_ret, right_ret);
            }
            case LE: {
-               IcmpLLVM icmp = new IcmpLLVM("sle", left_ret, right_ret);
-               ZextLLVM zext = new ZextLLVM(icmp.result.reg_name);
-               c.llvm_instructions.add(icmp);
-               c.llvm_instructions.add(zext);
-               return zext.result;
+               return addComparisonInstructions (c, "sle", left_ret, right_ret);
            }
            case GT: {
-               IcmpLLVM icmp = new IcmpLLVM("sgt", left_ret, right_ret);
-               ZextLLVM zext = new ZextLLVM(icmp.result.reg_name);
-               c.llvm_instructions.add(icmp);
-               c.llvm_instructions.add(zext);
-               return zext.result;
+               return addComparisonInstructions (c, "sgt", left_ret, right_ret);
            }
            case GE: {
-               IcmpLLVM icmp = new IcmpLLVM("sge", left_ret, right_ret);
-               ZextLLVM zext = new ZextLLVM(icmp.result.reg_name);
-               c.llvm_instructions.add(icmp);
-               c.llvm_instructions.add(zext);
-               return zext.result;
+               return addComparisonInstructions (c, "sge", left_ret, right_ret);
            }
            case EQ: {
-               IcmpLLVM icmp = new IcmpLLVM("eq", left_ret, right_ret);
-               ZextLLVM zext = new ZextLLVM(icmp.result.reg_name);
-               c.llvm_instructions.add(icmp);
-               c.llvm_instructions.add(zext);
-               return zext.result;
+               return addComparisonInstructions (c, "eq", left_ret, right_ret);
            }
            case NE: {
-               IcmpLLVM icmp = new IcmpLLVM("ne", left_ret, right_ret);
-               ZextLLVM zext = new ZextLLVM(icmp.result.reg_name);
-               c.llvm_instructions.add(icmp);
-               c.llvm_instructions.add(zext);
-               return zext.result;
+               return addComparisonInstructions (c, "ne", left_ret, right_ret);
            }
            case AND: {
                AndLLVM and = new AndLLVM(left_ret, right_ret);
@@ -286,5 +267,15 @@ public class BinaryExpression
            default:
                throw new IllegalArgumentException();
        }
+
    }
+
+
+    private ExprReturn addComparisonInstructions (CfgNode c, String cond, ExprReturn left_ret, ExprReturn right_ret) {
+        IcmpLLVM icmp = new IcmpLLVM(cond, left_ret, right_ret);
+        ZextLLVM zext = new ZextLLVM(icmp.result);
+        c.llvm_instructions.add(icmp);
+        c.llvm_instructions.add(zext);
+        return zext.result;
+    }
 }

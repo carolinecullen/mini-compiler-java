@@ -8,10 +8,13 @@ public class IdLLVM
 {
     String name;
     SymbolEntry.Scope scope;
+    public TypeLLVM type;
 
-    public IdLLVM(String id, SymbolEntry.Scope sc) {
+    public IdLLVM(String id, TypeLLVM ty, SymbolEntry.Scope sc) {
         name = id;
         scope = sc;
+        type = ty;
+
     }
 
     public String getName() {

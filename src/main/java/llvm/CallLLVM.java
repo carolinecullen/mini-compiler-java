@@ -1,28 +1,42 @@
 package llvm;
 
+import arm.BlArm;
+import arm.MovArm;
+import arm.MovwArm;
 import ast.Declaration;
+import cfg.CfgNode;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class CallLLVM
         implements InstructionLLVM {
+
     String ty;
-    String fnptrval;
+    public String fnptrval;
     public Register result = null;
-    ArrayList<ExprReturn> fnargs = new ArrayList<>();
-    List<Declaration> args_decls;
+    public ArrayList<ExprReturn> fnargs;
+    private List<Declaration> args_decls;
+    String instruction;
+
+    public void setInstruction(String instruction) {
+        this.instruction = instruction;
+    }
+
 
     public CallLLVM(String name, ArrayList<ExprReturn> l, TypeLLVM ret, List<Declaration> ad) {
         ty = ret.getName();
         fnptrval = name;
-
         if(!ret.getName().equals("void")) {
             result = new Register(ret);
         }
-
         args_decls = ad;
         fnargs = l;
+        instruction = this.toString();
+    }
+
+    public String getInstruction() {
+        return instruction;
     }
 
     public String toString () {
@@ -71,6 +85,34 @@ public class CallLLVM
         return ret_string;
     }
 
+    public ArrayList<String> getArm(CfgNode c_node) {
+        ArrayList<String> ret_str = new ArrayList<>();
+
+        int reg_count = 0;
+
+        for(ExprReturn s: fnargs) {
+            if(!(s == null)){
+                MovArm mw = new MovArm(s, "r" + Integer.toString(reg_count));
+                ret_str.add(mw.toString());
+            }
+
+        }
+
+        BlArm b = new BlArm(fnptrval);
+        ret_str.add(b.toString());
+
+        if(result != null) {
+            MovArm mf = new MovArm("r0", result);
+            ret_str.add(mf.toString());
+        }
+
+//        MovArm m = new MovArm("r0", result);
+//        ret_str.add(m.toString());
+
+        return ret_str;
+    }
+
+
     private String getParamTypeFromOG (int pos) {
 
         int i = 0;
@@ -83,4 +125,13 @@ public class CallLLVM
         return null;
     }
 
+    public void replaceRegForOpt(String func_name) {}
+
+    public Register getReturnVal() {
+        return result;
+    }
+
+    public void replaceRet(Register r) {
+        result = r;
+    }
 }

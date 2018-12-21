@@ -4,7 +4,7 @@ fun foo(int i) int      # standard case
 }
 
 #do control flow and make sure that function calls are matching arguments
-fun bar(int i) int      # control flow case
+fun main(int i) int      # control flow case
 {
    if (i > 0)
    {

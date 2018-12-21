@@ -2,9 +2,9 @@ package mini;//import ast.Declaration;
 import ast.Program;
 import ast.StructField;
 import ast.SymbolEntry;
-import llvm.BoolLLVM;
-import llvm.InstructionLLVM;
-import llvm.IntLLVM;
+import cfg.CfgNode;
+import cfg.OptimizeCFG;
+import llvm.*;
 import org.antlr.v4.runtime.*;
 import org.antlr.v4.runtime.tree.*;
 import java.io.*;
@@ -16,85 +16,99 @@ import java.util.Set;
 public class MiniCompiler
 {
     public static int blockNum = 0;
+    public static ParamSpecifier user_spec;
+    private static boolean graph;
+    public static boolean no_opt = false;
+    public static ast.Program program;
+    public static ArrayList<cfg.Cfg> cfgs = new ArrayList<>();
+    private static ParamSpecifier print_output = ParamSpecifier.File;
+    public static int phi_counter = 0;
 
-    private enum ParamSpecifier {
+    public enum ParamSpecifier {
         Stack,
-        Graph,
         Symbol,
-        LLVM
+        LLVM,
+        File
     }
 
    public static void main(String[] args) throws FileNotFoundException, UnsupportedEncodingException
    {
-      ParamSpecifier user_spec = parseParameters(args);
+       parseParameters(args);
 
-      CommonTokenStream tokens = new CommonTokenStream(createLexer());
-      MiniParser parser = new MiniParser(tokens);
-      ParseTree tree = parser.program();
+       CommonTokenStream tokens = new CommonTokenStream(createLexer());
+       MiniParser parser = new MiniParser(tokens);
+       ParseTree tree = parser.program();
 
-      if (parser.getNumberOfSyntaxErrors() == 0)
-      {
-         /*
-            This visitor will build an object representation of the AST
-            in Java using the provided classes.
-         */
-         MiniToAstProgramVisitor programVisitor =
-            new MiniToAstProgramVisitor();
-         ast.Program program = programVisitor.visit(tree);
-         program.TypeCheck();
+       if (parser.getNumberOfSyntaxErrors() == 0)
+       {
+          /*
+             This visitor will build an object representation of the AST
+             in Java using the provided classes.
+          */
+           MiniToAstProgramVisitor programVisitor =
+              new MiniToAstProgramVisitor();
+           program = programVisitor.visit(tree);
+           program.TypeCheck();
 
-         if (user_spec == ParamSpecifier.Symbol) {
-             program.printSymbolTable();
-             return;
-         }
+           if (user_spec == ParamSpecifier.Symbol) {
+               program.printSymbolTable();
+               return;
+           }
 
-         ArrayList<cfg.Cfg> cfgs = new ArrayList<>();
+           for(ast.Function f: program.funcs) {
+               cfg.Cfg cur = new cfg.Cfg(f, false, null);
+               cfgs.add(cur);
+           }
 
-         for(ast.Function f: program.funcs) {
-             cfg.Cfg cur = new cfg.Cfg(f);
-             cfgs.add(cur);
-         }
 
-          if (user_spec == ParamSpecifier.Stack) {
-              PrintLLVMToStdOut(cfgs);
-          } else {
-              PrintWriter llvm_writer;
-              llvm_writer = new PrintWriter(_llvmFile, "UTF-8");
-              PrintLLVMToFile(cfgs, llvm_writer);
-              llvm_writer.close();
-          }
+           if (print_output == ParamSpecifier.LLVM) {
+               PrintLLVMToStdOut(cfgs);
+           } else {
+               PrintWriter llvm_writer;
+               llvm_writer = new PrintWriter(_llvmFile, "UTF-8");
+               PrintLLVMToFile(cfgs, llvm_writer);
+               llvm_writer.close();
+           }
 
-         if (user_spec == ParamSpecifier.Graph) {
-             CreateDotFormat(cfgs, program.funcs);
-         }
+           PrintWriter arm_writer;
+           arm_writer = new PrintWriter(_armFile, "UTF-8");
 
+           arm.ArmCodegen.codegen(cfgs, arm_writer);
+           arm_writer.close();
+
+           if (graph) {
+               CreateDotFormat(cfgs, program.funcs);
+           }
       }
    }
 
     private static String _inputFile = null;
     public static String _llvmFile = null;
+    public static String _armFile = null;
 
-    private static ParamSpecifier parseParameters(String [] args)
+    private static void parseParameters(String [] args)
     {
        for (int i = 0; i < args.length; i++)
        {
           if (args[i].charAt(0) == '-')
           {
+              // if stack then this means that optimize cannot also be selected because the optimization
+              // requires SSA format
               if (args[i].equals("-stack") || args[i].equals("-s")) {
-                  return ParamSpecifier.Stack;
+                  user_spec = ParamSpecifier.Stack;
               } else if (args[i].equals("-graph") || args[i].equals("-g")) {
-                  return ParamSpecifier.Graph;
+                  graph = true;
               } else if (args[i].equals("-symbol") || args[i].equals("-S")) {
-                  return ParamSpecifier.Symbol;
+                  user_spec = ParamSpecifier.Symbol;
               } else if (args[i].equals("-llvm") || args[i].equals("-l")) {
-                  return ParamSpecifier.LLVM;
-              }else {
+                  print_output = ParamSpecifier.LLVM;
+              } else if (args[i].equals("-nooptimizations") || args[i].equals("-no")) {
+                  no_opt = true;
+              } else {
                   System.err.println("unexpected option: " + args[i]);
                   System.exit(1);
               }
-          }
-          else if (_inputFile != null)
-          {
+          } else if (_inputFile != null) {
              System.err.println("too many files specified");
              System.exit(1);
           }
@@ -104,41 +118,41 @@ public class MiniCompiler
               String input =_inputFile.substring(_inputFile.lastIndexOf('/')).substring(1);
               String result = input.substring(0, input.lastIndexOf('.'));
               _llvmFile = result + ".ll";
+              _armFile = result + ".s";
           }
        }
-        return null;
     }
 
-   private static void error(String msg)
-   {
-      System.err.println(msg);
-      System.exit(1);
-   }
+    private static void error(String msg)
+    {
+        System.err.println(msg);
+        System.exit(1);
+    }
 
-   private static MiniLexer createLexer()
-   {
-      try
-      {
-         CharStream input;
-         if (_inputFile == null)
-         {
-            input = CharStreams.fromStream(System.in);
-         }
-         else
-         {
-            input = CharStreams.fromFileName(_inputFile);
-         }
-         return new MiniLexer(input);
-      }
-      catch (java.io.IOException e)
-      {
-         System.err.println("file not found: " + _inputFile);
-         System.exit(1);
-         return null;
-      }
-   }
+    private static MiniLexer createLexer()
+    {
+        try
+        {
+           CharStream input;
+           if (_inputFile == null)
+           {
+              input = CharStreams.fromStream(System.in);
+           }
+           else
+           {
+              input = CharStreams.fromFileName(_inputFile);
+           }
+           return new MiniLexer(input);
+        }
+        catch (java.io.IOException e)
+       {
+           System.err.println("file not found: " + _inputFile);
+           System.exit(1);
+           return null;
+        }
+    }
 
-   // INSTRUCTIONS FOR GETTING DOT GRAPH:
+    // INSTRUCTIONS FOR GETTING DOT GRAPH:
     // go into cfgs.dot and remove all but one digraph
     //
     // dot -Tpng -otmp.png cfgs.dot
@@ -146,7 +160,7 @@ public class MiniCompiler
     //
     // NOTE: much easier to read without printing the predecessors
 
-   private static void CreateDotFormat(ArrayList<cfg.Cfg> cfgs, List<ast.Function> funcs) throws FileNotFoundException, UnsupportedEncodingException {
+    private static void CreateDotFormat(ArrayList<cfg.Cfg> cfgs, List<ast.Function> funcs) throws FileNotFoundException, UnsupportedEncodingException {
        PrintWriter writer = new PrintWriter("cfgs.dot", "UTF-8");
        int i = 0;
        for(cfg.Cfg c: cfgs) {
@@ -160,7 +174,7 @@ public class MiniCompiler
        writer.close();
    }
 
-   private static void CreateSuccessorGraph(cfg.Cfg cur_graph, PrintWriter w) {
+    private static void CreateSuccessorGraph(cfg.Cfg cur_graph, PrintWriter w) {
        for (cfg.CfgNode main_node: cur_graph.node_list) {
            for (cfg.CfgNode sucs_node: main_node.sucs) {
                w.println("    " + main_node.label + " -> " + sucs_node.label + ";");
@@ -190,8 +204,15 @@ public class MiniCompiler
                 } else {
                     System.out.println("\n" + main_node.label + ":");
                 }
+                if(!(user_spec == ParamSpecifier.Stack)) {
+                    for (InstructionLLVM i: main_node.phis) {
+                        if(((PhiLLVM)i).value_block_pairs.size() != 0) {
+                            System.out.println("\t" + i);
+                        }
+                    }
+                }
                 for (InstructionLLVM i: main_node.llvm_instructions) {
-                    System.out.println("\t" + i);
+                    System.out.println("\t" + i.getInstruction());
                 }
             }
             System.out.println("}\n");
@@ -213,14 +234,33 @@ public class MiniCompiler
                 } else {
                     w.println("\n" + main_node.label + ":");
                 }
+                if(!(user_spec == ParamSpecifier.Stack)) {
+                    for (InstructionLLVM i: main_node.phis) {
+                        if(((PhiLLVM)i).value_block_pairs.size() != 0) {
+                            w.println("\t" + i);
+                            putPhiValuesForOutOfBlock(((PhiLLVM)i), cur_graph);
+                        }
+                    }
+                }
                 for (InstructionLLVM i: main_node.llvm_instructions) {
-                    w.println("\t" + i);
+                    w.println("\t" + i.getInstruction());
                 }
             }
             w.println("}\n");
         }
         w.println(footer_ret);
     }
+
+    private static void putPhiValuesForOutOfBlock(PhiLLVM phi, cfg.Cfg graph) {
+        for(Tuple<ExprReturn, String> vbp: phi.value_block_pairs) {
+            for(CfgNode node: graph.node_list) {
+                if(node.label.equals(vbp.branch)) {
+                    node.phi_values_out_of_block.put(vbp.name, phi.phi_number);
+                }
+            }
+        }
+    }
+
     private static String GetProgramHeader() {
         String ret_str = "target triple=\"i686\"\n";
 
@@ -290,4 +330,5 @@ public class MiniCompiler
                "@.print = private unnamed_addr constant [5 x i8] c\"%ld \\00\", align 1\n";
        return ret_str;
     }
+
 }

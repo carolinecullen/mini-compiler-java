@@ -1,11 +1,15 @@
 package ast;
 
+import cfg.OptimizeCFG;
 import llvm.CallLLVM;
 import llvm.ExprReturn;
+import llvm.ImmediateLLVM;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+
+import static mini.MiniCompiler.no_opt;
 
 public class InvocationExpression
    extends AbstractExpression
@@ -79,14 +83,13 @@ public class InvocationExpression
    }
 
    public ExprReturn getLLVM (cfg.CfgNode c, ast.Function f) {
+       SymbolEntry ret_f = ast.Program.glob_symbol_table.get(name);
+       Type ret = null;
 
        ArrayList<ExprReturn> l = new ArrayList<>();
        for(Expression e: arguments) {
-            l.add(e.getLLVM(c, f));
+           l.add(e.getLLVM(c, f));
        }
-
-       SymbolEntry ret_f = ast.Program.glob_symbol_table.get(name);
-       Type ret = null;
 
        FunctionType ret_func = null;
        if(ret_f.type instanceof FunctionType) {
@@ -98,8 +101,14 @@ public class InvocationExpression
        }
 
        CallLLVM ni = new CallLLVM(name, l, ret.getLLVMType(), ret_func.parameters);
-       c.llvm_instructions.add(ni);
-       return ni.result;
+
+       if(OptimizeCFG.containsFunc(name) && !no_opt) {
+           ExprReturn ret_inline = OptimizeCFG.inlineCall(c, ni);
+           return ret_inline;
+       } else {
+           c.llvm_instructions.add(ni);
+           return ni.result;
+       }
    }
 
 }

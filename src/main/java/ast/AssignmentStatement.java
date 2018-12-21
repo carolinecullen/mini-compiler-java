@@ -28,4 +28,8 @@ public class AssignmentStatement
          return null;
       }
    }
+
+   public boolean returnCheck() {
+      return false;
+   }
 }

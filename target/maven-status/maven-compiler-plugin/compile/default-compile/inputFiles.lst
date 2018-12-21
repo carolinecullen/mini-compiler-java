@@ -38,14 +38,13 @@
 /Users/carolinecullen/Documents/mini-compiler-java/src/main/java/ast/DotExpression.java
 /Users/carolinecullen/Documents/mini-compiler-java/src/main/java/llvm/ReadLLVM.java
 /Users/carolinecullen/Documents/mini-compiler-java/src/main/java/mini/MiniToAstTypeDeclarationVisitor.java
-/Users/carolinecullen/Documents/mini-compiler-java/src/main/java/llvm/LoadGlobalLLVM.java
 /Users/carolinecullen/Documents/mini-compiler-java/src/main/java/ast/VoidType.java
 /Users/carolinecullen/Documents/mini-compiler-java/src/main/java/llvm/Register.java
-/Users/carolinecullen/Documents/mini-compiler-java/src/main/java/llvm/PhiTypeLLVM.java
 /Users/carolinecullen/Documents/mini-compiler-java/src/main/java/ast/IntegerExpression.java
 /Users/carolinecullen/Documents/mini-compiler-java/src/main/java/mini/MiniParser.java
 /Users/carolinecullen/Documents/mini-compiler-java/src/main/java/llvm/BitcastLLVM.java
 /Users/carolinecullen/Documents/mini-compiler-java/src/main/java/ast/BoolType.java
+/Users/carolinecullen/Documents/mini-compiler-java/src/main/java/cfg/SSA.java
 /Users/carolinecullen/Documents/mini-compiler-java/src/main/java/ast/DeleteStatement.java
 /Users/carolinecullen/Documents/mini-compiler-java/src/main/java/ast/FunctionType.java
 /Users/carolinecullen/Documents/mini-compiler-java/src/main/java/llvm/AllocLLVM.java
@@ -62,7 +61,9 @@
 /Users/carolinecullen/Documents/mini-compiler-java/src/main/java/ast/TrueExpression.java
 /Users/carolinecullen/Documents/mini-compiler-java/src/main/java/llvm/FreeLLVM.java
 /Users/carolinecullen/Documents/mini-compiler-java/src/main/java/ast/NullType.java
+/Users/carolinecullen/Documents/mini-compiler-java/src/main/java/llvm/Tuple.java
 /Users/carolinecullen/Documents/mini-compiler-java/src/main/java/mini/MiniToAstFunctionVisitor.java
+/Users/carolinecullen/Documents/mini-compiler-java/src/main/java/llvm/TruncLLVM.java
 /Users/carolinecullen/Documents/mini-compiler-java/src/main/java/llvm/PrintflnLLVM.java
 /Users/carolinecullen/Documents/mini-compiler-java/src/main/java/llvm/IcmpLLVM.java
 /Users/carolinecullen/Documents/mini-compiler-java/src/main/java/ast/NullExpression.java
@@ -89,6 +90,7 @@
 /Users/carolinecullen/Documents/mini-compiler-java/src/main/java/ast/UnaryExpression.java
 /Users/carolinecullen/Documents/mini-compiler-java/src/main/java/ast/AssignmentStatement.java
 /Users/carolinecullen/Documents/mini-compiler-java/src/main/java/llvm/GetPtrLLVM.java
+/Users/carolinecullen/Documents/mini-compiler-java/src/main/java/llvm/ZextLLVM.java
 /Users/carolinecullen/Documents/mini-compiler-java/src/main/java/ast/Program.java
 /Users/carolinecullen/Documents/mini-compiler-java/src/main/java/ast/Function.java
 /Users/carolinecullen/Documents/mini-compiler-java/src/main/java/cfg/CfgNode.java

@@ -23,4 +23,8 @@ public class DeleteStatement
          return null;
       }
    }
+
+   public boolean returnCheck() {
+      return false;
+   }
 }

@@ -19,4 +19,6 @@ public class ReturnEmptyStatement
            return null;
        }
    }
+
+    public boolean returnCheck() { return true; }
 }

@@ -18,6 +18,6 @@ public class FalseExpression
    }
 
    public ExprReturn getLLVM(cfg.CfgNode c, ast.Function f) {
-      return new ImmediateLLVM(1);
+      return new ImmediateLLVM(0);
    }
 }

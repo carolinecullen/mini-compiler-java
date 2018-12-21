@@ -24,7 +24,6 @@ fun prime(int a) bool
 		divisor = 2;
 		while (divisor <= max)
 		{
-		print 1 endl;
 			remainder = a - ((a / divisor) * divisor);
 			if (remainder == 0)
 			{

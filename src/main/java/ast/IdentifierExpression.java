@@ -4,13 +4,16 @@ import llvm.ExprReturn;
 import llvm.IdLLVM;
 import llvm.LoadLLVM;
 import llvm.Register;
+import mini.MiniCompiler;
 
 import java.util.HashMap;
+
+import static mini.MiniCompiler.user_spec;
 
 public class IdentifierExpression
    extends AbstractExpression
 {
-   private final String id;
+   public final String id;
 
    public IdentifierExpression(int lineNum, String id)
    {
@@ -53,16 +56,30 @@ public class IdentifierExpression
            return null;
        }
 
-       LoadLLVM l;
-       if(cur.scope.equals(SymbolEntry.Scope.PARAM)) {
-           l = new LoadLLVM(new Register(new IdLLVM("_P_"+id, SymbolEntry.Scope.PARAM)), cur.type.getLLVMType());
-       } else if(cur.scope.equals(SymbolEntry.Scope.GLOB)) {
-           l = new LoadLLVM(new Register(new IdLLVM(id, SymbolEntry.Scope.GLOB)), cur.type.getLLVMType());
+
+       if(!(user_spec == MiniCompiler.ParamSpecifier.Stack)) {
+           if(cur.scope.equals(SymbolEntry.Scope.PARAM)) {
+               return cfg.Cfg.ssa.readVariable(c, id, cur.type.getLLVMType());
+           } else if(cur.scope.equals(SymbolEntry.Scope.LOC)) {
+               return cfg.Cfg.ssa.readVariable(c, id, cur.type.getLLVMType());
+           } else {
+               LoadLLVM l = new LoadLLVM(new Register(new IdLLVM(id, cur.type.getLLVMType(), SymbolEntry.Scope.GLOB)), cur.type.getLLVMType());
+               c.llvm_instructions.add(l);
+               return l.result;
+           }
        } else {
-           l = new LoadLLVM(new Register(new IdLLVM(id, SymbolEntry.Scope.LOC)), cur.type.getLLVMType());
+           LoadLLVM l;
+           if(cur.scope.equals(SymbolEntry.Scope.PARAM)) {
+               l = new LoadLLVM(new Register(new IdLLVM("_P_"+id, cur.type.getLLVMType(), SymbolEntry.Scope.PARAM)), cur.type.getLLVMType());
+           } else if(cur.scope.equals(SymbolEntry.Scope.GLOB)) {
+               l = new LoadLLVM(new Register(new IdLLVM(id, cur.type.getLLVMType(), SymbolEntry.Scope.GLOB)), cur.type.getLLVMType());
+           } else {
+               l = new LoadLLVM(new Register(new IdLLVM("_" + id, cur.type.getLLVMType(), SymbolEntry.Scope.LOC)), cur.type.getLLVMType());
+           }
+
+           c.llvm_instructions.add(l);
+           return l.result;
        }
 
-       c.llvm_instructions.add(l);
-       return l.result;
    }
 }

@@ -21,4 +21,8 @@ public class InvocationStatement
       return expression.TypeCheck(locals, ret_type);
    }
 
+   public boolean returnCheck() {
+      return false;
+   }
+
 }
